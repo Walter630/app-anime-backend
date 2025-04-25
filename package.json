@@ -1,0 +1,30 @@
+{
+  "name": "projeto",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "1234"
+  ],
+  "homepage": "https://github.com/Walter630/AplicativoAnimes#readme",
+  "bugs": {
+    "url": "https://github.com/Walter630/AplicativoAnimes/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Walter630/AplicativoAnimes.git"
+  },
+  "license": "ISC",
+  "author": "walter",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run dev"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0",
+    "git": "^0.1.5",
+    "mysql2": "^3.14.0",
+    "pinia": "^3.0.2"
+  }
+}
