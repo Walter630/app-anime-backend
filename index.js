@@ -24,7 +24,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'animesdb',
+  database: 'animedb',
   port: 3306,
 })
 
@@ -164,5 +164,5 @@ app.get('/todos', (req, res) => {
 // })
 
 http.createServer(app).listen(4000, () => {
-  console.log('🚀 Backend rodando em http://localhost:4000')
+  console.log('🚀 Backend rodando em http://localhost:400000')
 })
