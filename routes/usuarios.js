@@ -2,6 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 const db = require('../db');
+const jwt = require('jsonwebtoken');
+const { hash } = require('bcryptjs');
+const saltRouds = 10;
+
 
 router.post('/', async (req, res) => {
     const { name, email, senha } = req.body;
@@ -18,7 +22,8 @@ router.post('/', async (req, res) => {
         return res.status(409).json({ message: 'Email já cadastrado' });
       }
        // 🔥 AQUI: Criptografa a senha antes de salvar
-      const senhaHash = await bcrypt.hash(senha, 8);
+      const salt = await bcrypt.genSalt(saltRouds)
+      const senhaHash = await bcrypt.hash(senha, salt);
 
       // Insere o novo usuário no banco
       const [result] = await db.query(
@@ -47,10 +52,11 @@ router.post('/login', async (req, res) => {
     const usuario = usuarios[0];
 
     // Usando async/await com bcrypt.compare
-    const isMatch = await bcrypt.compare(senha, usuario.senha);
+    const verifica = bcrypt.compare(senha, usuario.senha) 
 
-    if (isMatch) {
-      res.json({ message: 'Login bem-sucedido', usuario });
+    if (verifica) {
+      const token = jwt.sign({ id: usuario.id, email: usuario.email }, 'secreta-chave', { expiresIn: '1h' });
+      res.json({ message: 'Login bem-sucedido', usuario, token });
     } else {
       res.status(400).json({ message: 'Senha incorreta' });
     }
