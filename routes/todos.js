@@ -4,15 +4,15 @@ const db = require('../db');
 
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { title, descrition, image } = req.body;
+    const { title, descrition, image, categoria } = req.body;
 
     try {
       const [result] = await db.query(
-        'UPDATE todos SET title = ?, descrition = ?, image = ? WHERE id = ?',
-        [title, descrition, image, id]
+        'UPDATE todos SET title = ?, descrition = ?, image = ?, categoria=? WHERE id = ?',
+        [title, descrition, image, categoria, id]
       );
 
-      res.json({ id, title, descrition, image });
+      res.json({ id, title, descrition, image, categoria });
     } catch (err) {
       console.error('Erro ao atualizar anime:', err);
       res.status(500).json({ message: 'Erro ao atualizar o anime' });
@@ -20,19 +20,20 @@ const db = require('../db');
   });
 
   router.post('/', async (req, res) => {
-    const { title, descrition, image } = req.body;
+    const { title, descrition, image, categoria } = req.body;
 
     try {
       const [result] = await db.query(
-        'INSERT INTO todos (title, descrition, image) VALUES (?, ?, ?)',
-        [title, descrition, image]
+        'INSERT INTO todos (title, descrition, image, categoria) VALUES (?, ?, ?, ?)',
+        [title, descrition, image, categoria]
       );
 
       res.status(201).json({
         id: result.insertId,
         title,
         descrition,
-        image
+        image,
+        categoria
       });
     } catch (err) {
       console.error('Erro ao adicionar anime:', err);
