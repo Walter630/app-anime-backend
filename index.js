@@ -5,91 +5,124 @@ const bodyParser = require('body-parser');
 const { Server } = require('socket.io');
 const { join } = require('node:path');
 const sqlite3 = require('sqlite3');
-const {open} = require('sqlite')
+const { open } = require('sqlite');
+const { availableParallelism } = require('node:os');
+const cluster = require('node:cluster');
+const { createAdapter, setupPrimary } = require('@socket.io/cluster-adapter');
+
+
+// Verificar se o processo é o principal
+if (cluster.isPrimary) {
+  const numCPUs = availableParallelism();
+  // Cria um trabalhador para cada CPU disponível
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork({
+      PORT: 4000 + i
+    });
+  }
+
+  // Configura o adaptador para threads
+  return setupPrimary();
+}
 
 async function main() {
-  // open the database file
+  // Abre o arquivo do banco de dados
   const db = await open({
     filename: 'chat.db',
     driver: sqlite3.Database
   });
 
-  // create our 'messages' table (you can ignore the 'client_offset' column for now)
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        client_offset TEXT UNIQUE,
-        content TEXT
-    );
-  `);
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  connectionStateRecovery: {},
-  cors: {
-    origin: "*"
-  }
-});
-
-// Middlewares
-app.use(cors());
-app.use(express.json());
-app.use(bodyParser.json());
-
-// Rota simples para teste (página HTML opcional)
-app.get('/', (req, res) => {
-  res.sendFile(join(__dirname, 'index.html'));
-});
-
-// Rotas da API
-const usuariosRouter = require('./routes/usuarios');
-const todosRouter = require('./routes/todos');
-const uploadRouter = require('./routes/uploads');
+//   // Cria a tabela 'messages' caso não exista
+//   await db.exec(`
+//     CREATE TABLE IF NOT EXISTS messages (
+//         id INTEGER PRIMARY KEY AUTOINCREMENT,
+//         client_offset TEXT UNIQUE,
+//         content TEXT
+//     );
+// `);
+// await db.exec(`
+//   CREATE TABLE IF NOT EXISTS episodios (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     anime_id INTEGER,
+//     title TEXT,
+//     description TEXT,
+//     video TEXT,
+//     episodio INTEGER,
+//     FOREIGN KEY(anime_id) REFERENCES todos(id)
+//   );
+// `);
 
 
-app.use('/usuarios', usuariosRouter);
-app.use('/todos', todosRouter);
-app.use('/uploads', uploadRouter);
-
-
-// WebSocket (Socket.io)
-io.on('connection', async (socket) => {
-  socket.on('chat message', async (msg) => {
-    let result;
-    try {
-      result = await db.run('INSERT INTO messages (content) VALUES (?)', msg);
-    } catch (e) {
-      // TODO handle the failure
-      return;
-    }
-    io.emit('chat message', msg, result.lastID);
+  const app = express();
+  const server = http.createServer(app);
+  const io = new Server(server, {
+    connectionStateRecovery: {},
+    cors: {
+      origin: "*"
+    },
+    adapter: createAdapter()
   });
 
-  if (!socket.recovered) {
-    // if the connection state recovery was not successful
-    try {
-      await db.each('SELECT id, content FROM messages WHERE id > ?',
-        [socket.handshake.auth.serverOffset || 0],
-        (_err, row) => {
-          socket.emit('chat message', row.content, row.id);
-        }
-      )
-    } catch (e) {
-      // something went wrong
-    }
-  }
+  // Middlewares
+  app.use(cors());
+  app.use(express.json());
+  app.use(bodyParser.json());
 
+  // Rota simples para testar (página HTML opcional)
+  app.get('/', (req, res) => {
+    res.sendFile(join(__dirname, 'index.html'));
+  });
+
+  // Rotas da API (usuários, todos, uploads)
+  const usuariosRouter = require('./routes/usuarios');
+  const todosRouter = require('./routes/todos');
+  const uploadRouter = require('./routes/uploads');
+  
+  app.use('/usuarios', usuariosRouter);
+  app.use('/todos', todosRouter);
+  app.use('/uploads', uploadRouter);
+
+  // WebSocket (Socket.io)
+  io.on('connection', async (socket) => {
+    // Escuta a mensagem 'chat message'
+    socket.on("chat message", async (msg, clientOffset, callback) => {
+      let result;
+      try {
+        // Insere a mensagem no banco de dados
+        result = await db.run('INSERT INTO messages (content, client_Offset) VALUES (?, ?)', msg, clientOffset);
+      } catch (e) {
+        callback({ success: false });
+        return;
+      }
+      io.emit('chat message', msg, result.lastID); // Emite a mensagem para todos os sockets conectados
+      callback({ success: true });  // Envia a confirmação de sucesso
+    });
+
+    // Recupera as mensagens anteriores para o cliente
+    if (!socket.recovered) {
+      try {
+        await db.each('SELECT id, content FROM messages WHERE id > ?',
+          [socket.handshake.auth.serverOffset || 0],
+          (_err, row) => {
+            socket.emit('chat message', row.content, row.id); // Emite mensagens anteriores
+          }
+        );
+      } catch (e) {
+        // Tratar erro
+      }
+    }
+
+    // Evento de desconexão
     socket.on('disconnect', () => {
       console.log('❌ Usuário desconectado');
     });
   });
 
-
-
-// Inicia o servidor
-  server.listen(4000, () => {
-    console.log('🚀 Backend rodando em http://localhost:4000');
+  // Inicia o servidor
+  const port = process.env.PORT || 4000; // Defina a porta corretamente
+  server.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
   });
 }
-main()
+
+main();

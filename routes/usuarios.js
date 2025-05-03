@@ -52,7 +52,7 @@ router.post('/login', async (req, res) => {
     const usuario = usuarios[0];
 
     // Usando async/await com bcrypt.compare
-    const verifica = bcrypt.compare(senha, usuario.senha) 
+    const verifica = await bcrypt.compare(senha, usuario.senha) 
 
     if (verifica) {
       const token = jwt.sign({ id: usuario.id, email: usuario.email }, 'secreta-chave', { expiresIn: '1h' });

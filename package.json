@@ -21,6 +21,7 @@
     "test": "npm run dev"
   },
   "dependencies": {
+    "@socket.io/cluster-adapter": "^0.2.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
