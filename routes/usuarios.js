@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { hash } = require('bcryptjs');
 const saltRouds = 10;
 
+usuario.dataEntrada = new Date();
 
 router.post('/', async (req, res) => {
     const { name, email, senha } = req.body;

@@ -18,7 +18,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "npm run dev"
+    "test": "npm run dev",
+     "start": "node index.js"
   },
   "dependencies": {
     "@socket.io/cluster-adapter": "^0.2.2",
