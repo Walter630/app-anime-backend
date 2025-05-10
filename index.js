@@ -4,59 +4,36 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Server } = require('socket.io');
 const { join } = require('node:path');
-const sqlite3 = require('better-sqlite3');
-const { open } = require('sqlite');
+const { createAdapter } = require('@socket.io/cluster-adapter');
+const Database = require('better-sqlite3');
 
+function main() {
+  const db = new Database('chat.db');
 
-async function main() {
-  // Abre o arquivo do banco de dados
-  const db = await open({
-    filename: 'chat.db',
-    driver: sqlite3.Database
-  });
-
-//   // Cria a tabela 'messages' caso não exista
-//   await db.exec(`
-//     CREATE TABLE IF NOT EXISTS messages (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         client_offset TEXT UNIQUE,
-//         content TEXT
-//     );
-// `);
-// await db.exec(`
-//   CREATE TABLE IF NOT EXISTS episodios (
-//     id INTEGER PRIMARY KEY AUTOINCREMENT,
-//     anime_id INTEGER,
-//     title TEXT,
-//     description TEXT,
-//     video TEXT,
-//     episodio INTEGER,
-//     FOREIGN KEY(anime_id) REFERENCES todos(id)
-//   );
-// `);
-
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_offset TEXT UNIQUE,
+      content TEXT
+    );
+  `).run();
 
   const app = express();
   const server = http.createServer(app);
   const io = new Server(server, {
     connectionStateRecovery: {},
-    cors: {
-      origin: "*"
-    },
+    cors: { origin: "*" },
     adapter: createAdapter()
   });
 
-  // Middlewares
   app.use(cors());
   app.use(express.json());
   app.use(bodyParser.json());
 
-  // Rota simples para testar (página HTML opcional)
   app.get('/', (req, res) => {
     res.sendFile(join(__dirname, 'index.html'));
   });
 
-  // Rotas da API (usuários, todos, uploads)
   const usuariosRouter = require('./routes/usuarios');
   const todosRouter = require('./routes/todos');
   const uploadRouter = require('./routes/uploads');
@@ -65,44 +42,31 @@ async function main() {
   app.use('/todos', todosRouter);
   app.use('/uploads', uploadRouter);
 
-  // WebSocket (Socket.io)
-  io.on('connection', async (socket) => {
-    // Escuta a mensagem 'chat message'
-    socket.on("chat message", async (msg, clientOffset, callback) => {
-      let result;
+  io.on('connection', (socket) => {
+    socket.on("chat message", (msg, clientOffset, callback) => {
       try {
-        // Insere a mensagem no banco de dados
-        result = await db.run('INSERT INTO messages (content, client_Offset) VALUES (?, ?)', msg, clientOffset);
-      } catch (e) {
+        const result = db.prepare('INSERT INTO messages (content, client_offset) VALUES (?, ?)').run(msg, clientOffset);
+        io.emit('chat message', msg, result.lastInsertRowid);
+        callback({ success: true });
+      } catch {
         callback({ success: false });
-        return;
       }
-      io.emit('chat message', msg, result.lastID); // Emite a mensagem para todos os sockets conectados
-      callback({ success: true });  // Envia a confirmação de sucesso
     });
 
-    // Recupera as mensagens anteriores para o cliente
     if (!socket.recovered) {
-      try {
-        await db.each('SELECT id, content FROM messages WHERE id > ?',
-          [socket.handshake.auth.serverOffset || 0],
-          (_err, row) => {
-            socket.emit('chat message', row.content, row.id); // Emite mensagens anteriores
-          }
-        );
-      } catch (e) {
-        // Tratar erro
+      const offset = socket.handshake.auth.serverOffset || 0;
+      const rows = db.prepare('SELECT id, content FROM messages WHERE id > ?').all(offset);
+      for (const row of rows) {
+        socket.emit('chat message', row.content, row.id);
       }
     }
 
-    // Evento de desconexão
     socket.on('disconnect', () => {
       console.log('❌ Usuário desconectado');
     });
   });
 
-  // Inicia o servidor
-  const port = process.env.PORT || 4000; // Defina a porta corretamente
+  const port = process.env.PORT || 4000;
   server.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
   });
