@@ -18,8 +18,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+      "postinstall": "npm rebuild sqlite3",
     "test": "npm run dev",
-     "start": "node index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "@socket.io/cluster-adapter": "^0.2.2",
