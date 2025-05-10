@@ -6,24 +6,11 @@ const { Server } = require('socket.io');
 const { join } = require('node:path');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
-const { availableParallelism } = require('node:os');
-const cluster = require('node:cluster');
-const { createAdapter, setupPrimary } = require('@socket.io/cluster-adapter');
 
 
-// Verificar se o processo é o principal
-if (cluster.isPrimary) {
-  const numCPUs = availableParallelism();
-  // Cria um trabalhador para cada CPU disponível
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork({
-      PORT: 4000 + i
-    });
-  }
+const { createAdapter } = require('@socket.io/cluster-adapter');
 
-  // Configura o adaptador para threads
-  return setupPrimary();
-}
+
 
 async function main() {
   // Abre o arquivo do banco de dados
