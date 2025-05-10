@@ -18,13 +18,13 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-      "postinstall": "npm rebuild sqlite3",
-    "test": "npm run dev",
+    "postinstall": "npm install --build-from-source sqlite3",
     "start": "node index.js"
   },
   "dependencies": {
     "@socket.io/cluster-adapter": "^0.2.2",
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^11.10.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "git": "^0.1.5",
@@ -33,7 +33,6 @@
     "mysql2": "^3.14.0",
     "pinia": "^3.0.2",
     "socket.io": "^4.8.1",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite": "^5.1.1"
   }
 }

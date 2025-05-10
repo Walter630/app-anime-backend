@@ -4,12 +4,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Server } = require('socket.io');
 const { join } = require('node:path');
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('better-sqlite3');
 const { open } = require('sqlite');
-
-
-const { createAdapter } = require('@socket.io/cluster-adapter');
-
 
 
 async function main() {
