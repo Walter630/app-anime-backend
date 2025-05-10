@@ -18,7 +18,6 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npm install --build-from-source sqlite3",
     "start": "node index.js"
   },
   "dependencies": {
