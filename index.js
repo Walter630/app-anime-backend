@@ -5,18 +5,10 @@ const bodyParser = require('body-parser');
 const { Server } = require('socket.io');
 const { join } = require('node:path');
 const { createAdapter } = require('@socket.io/cluster-adapter');
-const Database = require('better-sqlite3');
+
 
 function main() {
-  const db = new Database('chat.db');
-
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      client_offset TEXT UNIQUE,
-      content TEXT
-    );
-  `).run();
+  
 
   const app = express();
   const server = http.createServer(app);
