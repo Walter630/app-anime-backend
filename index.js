@@ -4,18 +4,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Server } = require('socket.io');
 const { join } = require('node:path');
-const { createAdapter } = require('@socket.io/cluster-adapter');
+const db = require('./db'); // importa sua conexão MySQL
 
-
-function main() {
-  
-
+async function main() {
   const app = express();
   const server = http.createServer(app);
   const io = new Server(server, {
     connectionStateRecovery: {},
     cors: { origin: "*" },
-    adapter: createAdapter()
   });
 
   app.use(cors());
@@ -29,38 +25,48 @@ function main() {
   const usuariosRouter = require('./routes/usuarios');
   const todosRouter = require('./routes/todos');
   const uploadRouter = require('./routes/uploads');
-  
+
   app.use('/usuarios', usuariosRouter);
   app.use('/todos', todosRouter);
   app.use('/uploads', uploadRouter);
 
+  // WebSocket
   io.on('connection', (socket) => {
-    socket.on("chat message", (msg, clientOffset, callback) => {
+    socket.on("chat message", async (msg, clientOffset, callback) => {
       try {
-        const result = db.prepare('INSERT INTO messages (content, client_offset) VALUES (?, ?)').run(msg, clientOffset);
-        io.emit('chat message', msg, result.lastInsertRowid);
+        const [result] = await db.execute(
+          'INSERT INTO messages (content, client_offset) VALUES (?, ?)',
+          [msg, clientOffset]
+        );
+        io.emit('chat message', msg, result.insertId);
         callback({ success: true });
-      } catch {
+      } catch (err) {
+        console.error('Erro ao salvar mensagem:', err);
         callback({ success: false });
       }
     });
 
-    if (!socket.recovered) {
-      const offset = socket.handshake.auth.serverOffset || 0;
-      const rows = db.prepare('SELECT id, content FROM messages WHERE id > ?').all(offset);
-      for (const row of rows) {
-        socket.emit('chat message', row.content, row.id);
-      }
-    }
-
     socket.on('disconnect', () => {
       console.log('❌ Usuário desconectado');
     });
+
+    (async () => {
+      if (!socket.recovered) {
+        const offset = socket.handshake.auth.serverOffset || 0;
+        const [rows] = await db.execute(
+          'SELECT id, content FROM messages WHERE id > ?',
+          [offset]
+        );
+        for (const row of rows) {
+          socket.emit('chat message', row.content, row.id);
+        }
+      }
+    })();
   });
 
   const port = process.env.PORT || 4000;
   server.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`✅ Server running at http://localhost:${port}`);
   });
 }
 
