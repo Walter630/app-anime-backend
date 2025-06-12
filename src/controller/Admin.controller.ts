@@ -1,7 +1,8 @@
-import { Admin } from "../domain/Admin";
-import { createAdminDto } from "../dto/Admin.dto";
+import { plainToInstance } from "class-transformer";
+import { CreateAdminDto } from "../dto/Admin.dto";
 import { AdminServices } from "../services/Admin.services";
 import { Request, Response, NextFunction } from "express";
+import { validate } from "class-validator";
 
 export class AdminController {
     private readonly adminServic: AdminServices;
@@ -10,8 +11,14 @@ export class AdminController {
         this.adminServic = adminService;
     }
     async cadastrar(req: Request, res: Response) {
+        const dto = plainToInstance(CreateAdminDto, req.body)
+        const erros = await validate(dto)
+
+        if (erros.length > 0){
+            throw new Error('Opa parceiro, esta com erros no dto')
+        }
+
         try{
-            const dto: createAdminDto = req.body
             const admin = await this.adminServic.cadastrarAdmin(dto)
             res.status(201).json(admin)
         }catch (err) {

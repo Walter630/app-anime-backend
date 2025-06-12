@@ -1,6 +1,8 @@
 import { Response, Request } from 'express';
 import { AnimeServices } from './../services/Animes.services';
-import { createAnimeDTO } from '../dto/Animes.dto';
+import { CreateAnimeDto } from '../dto/Animes.dto';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 
 export class AnimesController {
     private animeServices: AnimeServices;
@@ -10,8 +12,14 @@ export class AnimesController {
     }
 
     public salvar = async(req: Request, res: Response) => {
+        const dto = plainToInstance(CreateAnimeDto, req.body)
+        const erros = await validate(dto)
+
+        if (erros.length > 0){
+            throw new Error('voce possui erros no DTOAnime')
+        }
+
         try{
-            const dto: createAnimeDTO = req.body
             const result = await this.animeServices.criarAnime(dto)
             res.status(201).json(result)
         }catch(err: any){

@@ -30,7 +30,7 @@ export class Admin {
         const email = this.admin.email
         const emailRules = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
         const emailLista = ['gmail', 'hotmail', 'yahoo']
-        const vericar = emailLista.some(dominio => emailLista.includes(dominio))
+        const vericar = emailLista.some(dominio => email.includes(dominio))
         if(!emailRules.test(email) || !vericar) {
             throw new Error('Email inválido')
         }

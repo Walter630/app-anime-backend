@@ -1,8 +1,7 @@
 import { Admin } from './../domain/Admin';
-import { createAdminDto } from "../dto/Admin.dto";
+import { AdminDtoListar, CreateAdminDto } from "../dto/Admin.dto";
 import { AdminDao } from '../Dao/Admin.dao';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 import { CreateToken, RefreshToken } from '../utils/jwt';
 
 export class AdminServices {
@@ -12,7 +11,7 @@ export class AdminServices {
     constructor(readonly adminsDao: AdminDao) {
         this.adminDao = adminsDao; 
     }
-    public async cadastrarAdmin(admin: createAdminDto): Promise<Admin> {
+    public async cadastrarAdmin(admin: CreateAdminDto): Promise<Admin> {
             if (!admin) {
                 throw new Error('Admin não encontrado');
                 }
@@ -23,7 +22,6 @@ export class AdminServices {
             if (!senhaCriptografada){
                 throw new Error('Erro ao criptografar senha');
             }
-            console.log(admin.id)
             const result = Admin.create(admin.nome, admin.email, senhaCriptografada)
             return await this.adminDao.criarAdmin(result)
     }
@@ -49,8 +47,12 @@ export class AdminServices {
         }
     }
 
-    public async listar() {
-        await this.adminDao.listarAdmin()
+    public async listar(): Promise<AdminDtoListar[] | null> {
+        const adminDto: AdminDtoListar[] | null = await this.adminDao.listarAdmin()
+        if (!adminDto) {
+            return null
+        }
+        return adminDto
     }
 
     public async buscarPorId(id: string): Promise<Admin | null> {

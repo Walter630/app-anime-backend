@@ -1,6 +1,6 @@
 import { UsuariosDao } from "../Dao/Usuarios.dao";
 import { Usuarios } from "../domain/Usuarios";
-import { createUsuarioDto, mostrarUsuarioDto} from "../dto/Usuarios.dto";
+import { CreateUsuarioDto} from "../dto/Usuarios.dto";
 import * as bcrypt from 'bcrypt'
 
 export class UsuariosServices {
@@ -10,7 +10,7 @@ export class UsuariosServices {
     constructor(readonly usuarioDao: UsuariosDao){
         this.usuariosDao = usuarioDao
     }
-    public salvar = async(usuariosDto: createUsuarioDto) => {
+    public salvar = async(usuariosDto: CreateUsuarioDto) => {
             if (!usuariosDto.nome){
                 console.log('Nome obrigatorio')
             }

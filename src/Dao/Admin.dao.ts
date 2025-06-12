@@ -9,7 +9,7 @@ export class AdminDao {
             admin.nome, admin.email, admin.senha
         ])
         const id = result.insertId
-        return Admin.build({id, nome, email, senha})
+        return Admin.build({id: id.toString(), nome, email, senha})
     }
 
     public async listarAdmin(): Promise<Admin[]> {

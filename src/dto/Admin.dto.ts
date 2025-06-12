@@ -1,37 +1,21 @@
-export interface createAdminDto {
+import { IsNotEmpty, IsString } from "class-validator";
+
+export interface AdminDtoListar {
     id: string;
     nome: string;
     email: string;
-    senha: string;
 }
 
-export interface mostrarAdminDto {
-    id: string;
-    nome: string;
-    email: string;
-    senha?: string;
-}
+export class CreateAdminDto {
+    @IsString()
+    @IsNotEmpty()
+    nome!: string;
 
-export interface atualizarAdminDto {
-    id: string;
-    nome?: string;
-    email?: string;
-    senha?: string;
-}
+    @IsString()
+    @IsNotEmpty()
+    email!: string;
 
-export interface deleteAdminDto {
-    id: string;
-}
-
-export interface listarAdminDto {
-    id: string;
-    nome: string;
-    email: string;
-    senha?: string;
-}
-
-export interface listarAdminPorNomeDto {
-    nome: string;
-    email?: string;
-    senha?: string;
+    @IsString()
+    @IsNotEmpty()
+    senha!: string;
 }

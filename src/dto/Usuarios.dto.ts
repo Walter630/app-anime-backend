@@ -2,7 +2,7 @@
 import { IsString, IsNotEmpty, IsOptional } from "class-validator";
 import { Type } from "class-transformer";
 
-export type UsuarioDto = {
+export type UsuarioDtoListar = {
     nome: string,
     email: string,
     senha: string

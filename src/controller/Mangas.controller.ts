@@ -1,5 +1,7 @@
-import { createMangasDto } from "../dto/Mangas.dto";
+import { plainToInstance } from "class-transformer";
+import { CreateMangasDto } from "../dto/Mangas.dto";
 import { MangasServices } from "../services/Mangas.services";
+import { validate } from "class-validator";
 
 export class MangasController {
     private readonly mangasServic: MangasServices;
@@ -9,13 +11,23 @@ export class MangasController {
     }
 
     public async salvar(req: any, res: any): Promise<void> {
-        const dto: createMangasDto = req.body;
-        const result = await this.mangasServic.salvar(dto);
-        if (!result) {
-            res.status(400).json({ message: 'Nao foi possivel criar o manga' });
-            return;
+        const dto = plainToInstance(CreateMangasDto, req.body)
+        const erros = await validate(dto)
+
+        if (erros.length > 0){
+            throw new Error('Mangas esta incorreto no dto')
         }
-        res.status(201).json(result);
+
+        try{
+            const result = await this.mangasServic.salvar(dto);
+            if (!result) {
+                res.status(400).json({ message: 'Nao foi possivel criar o manga' });
+            }
+            return res.status(201).json(result);
+        }catch(err){
+            console.log(err)
+            res.status(400).json({message: 'Erro ao criar'})
+        }
     }
 
     public async listarMangas(req: any, res: any): Promise<void> {
