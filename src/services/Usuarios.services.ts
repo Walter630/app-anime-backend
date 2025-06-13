@@ -1,3 +1,4 @@
+import { hash } from "crypto";
 import { UsuariosDao } from "../Dao/Usuarios.dao";
 import { Usuarios } from "../domain/Usuarios";
 import { CreateUsuarioDto, UsuarioDtoListar} from "../dto/Usuarios.dto";
@@ -69,11 +70,24 @@ export class UsuariosServices {
         }
     }
 
-    public async atualizarUser(usuarios: Usuarios){
+    public async atualizarUser(usuarios: Usuarios): Promise<boolean>{
         try{
+              // Busca o usuário atual no banco
+            const usuarioExistente = await this.usuariosDao.buscarPorIdUsuario(usuarios.id)
+            if (!usuarioExistente) throw new Error('Usuário não encontrado.')
+
+                // Se a senha foi enviada e é diferente da atual, criptografa
+            if (usuarios.senha && !(await bcrypt.compare(usuarios.senha, usuarioExistente.senha))) {
+                const senhaCript = await bcrypt.hash(usuarios.senha, this.COUNT_ROUNDS)
+                usuarios.senha = senhaCript
+            } else {
+                usuarios.senha = usuarioExistente.senha // mantém a senha atual
+            }
             await this.usuariosDao.AtualizarUsuario(usuarios)
+            return true
         }catch(err: any){
             throw new Error(err)
+            
         }
     }
 }

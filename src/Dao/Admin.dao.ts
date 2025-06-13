@@ -48,8 +48,12 @@ export class AdminDao {
         return atualizado.affectedRows > 0
     }
 
-    public async buscarPorEmail(email: string): Promise<Admin> {
+    public async buscarPorEmail(email: string): Promise<Admin | null> {
         const [buscar] = await configDb.query<RowDataPacket[]>('SELECT * FROM admins WHERE email = ?', [email])
+        if (!buscar || buscar.length === 0 ){
+            console.log(`[UsuariosDao] Usuário com email "${email}" não encontrado.`);
+            return null; //
+        }
         const rows = buscar[0]
         return Admin.build({ 
             id: rows.id,

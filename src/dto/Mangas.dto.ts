@@ -1,3 +1,4 @@
+import { Type } from "class-transformer";
 import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export interface MangasDtoListar {
@@ -18,6 +19,7 @@ export class CreateMangasDto {
     @IsOptional()
     status?: string;
 
+    @Type(() => Date)
     @IsDate()
     @IsOptional()
     data_lancamento?: Date;

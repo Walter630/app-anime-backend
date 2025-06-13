@@ -13,6 +13,13 @@ export class MangasServices {
         if(!dto.nome || !dto.descricao) {
             throw new Error('Nome ou descricao incompletas')
         }
+        const mangasExistente = await this.mangasDao.buscarPorNome(dto.nome)
+        if (mangasExistente){
+            throw new Error('Manga com este nome já existe.');
+        }
+        if (!dto.data_lancamento) {
+            dto.data_lancamento = new Date();
+        } 
         const mangas = Mangas.create(dto.nome, dto.imagem, dto.descricao, dto.capitulos, dto.status, dto.data_lancamento?.toDateString());
         return await this.mangaDao.criarManga(mangas);
     }
@@ -26,8 +33,8 @@ export class MangasServices {
     }
     
     public async buscarMangasPorId(id: string): Promise<Mangas> {
-        const [result]: any = await this.mangaDao.buscarMangaPorId(id);
-        return result;
+        const result = await this.mangaDao.buscarMangaPorId(id);
+        return result as Mangas;
     }
 
     public async deletarManga(id: string): Promise<void> {

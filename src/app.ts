@@ -1,3 +1,4 @@
+import 'reflect-metadata'; // deve ser o primeiro import
 import dotenv from 'dotenv'
 import path from 'path'
 

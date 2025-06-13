@@ -24,6 +24,7 @@ export class AnimesController {
             res.status(201).json(result)
         }catch(err: any){
             console.log(err.message)
+            res.status(400).json({message: 'Erro ao salvar anime'})
         }
     }
 

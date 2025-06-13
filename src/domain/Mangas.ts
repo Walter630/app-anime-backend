@@ -7,20 +7,20 @@ export type MangasProps = {
     descricao: string,
     imagem?: string,
     capitulos: number,
-    data_criacao?: string
+    data_Lancamento?: string
 }
 
 export class Mangas {
     private constructor(private mangas: MangasProps) {}
 
-    static create(nome: string, descricao: string, imagem: string, capitulos: number, status?: string, data_criacao?: string): Mangas {
+    static create(nome: string, descricao: string, imagem: string, capitulos: number, status?: string, data_lancamento?: string): Mangas {
         return new Mangas({
             id: randomUUID().toString(),
             nome,
             descricao,
             imagem,
             capitulos,
-            data_criacao: new Date().toISOString()
+            data_Lancamento: new Date().toISOString()
         })
     }
 
@@ -45,8 +45,8 @@ export class Mangas {
         return this.mangas.capitulos
 
     }
-    public get data_criacao(): string {
-        return this.mangas.data_criacao ? this.mangas.data_criacao : new Date().toISOString()
+    public get data_lancamento(): string {
+        return this.mangas.data_Lancamento ? this.mangas.data_Lancamento : new Date().toISOString()
     }
     public get status(): string {
         return this.mangas.status ? this.mangas.status : 'ativo'

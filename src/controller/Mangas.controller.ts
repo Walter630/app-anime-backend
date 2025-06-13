@@ -2,6 +2,7 @@ import { plainToInstance } from "class-transformer";
 import { CreateMangasDto } from "../dto/Mangas.dto";
 import { MangasServices } from "../services/Mangas.services";
 import { validate } from "class-validator";
+import { Mangas } from "../domain/Mangas";
 
 export class MangasController {
     private readonly mangasServic: MangasServices;
@@ -10,7 +11,7 @@ export class MangasController {
         this.mangasServic = mangasServices;
     }
 
-    public async salvar(req: any, res: any): Promise<void> {
+    public async salvar(req: any, res: any): Promise<Mangas> {
         const dto = plainToInstance(CreateMangasDto, req.body)
         const erros = await validate(dto)
 
@@ -26,7 +27,7 @@ export class MangasController {
             return res.status(201).json(result);
         }catch(err){
             console.log(err)
-            res.status(400).json({message: 'Erro ao criar'})
+            return res.status(400).json({message: 'Erro ao criar'})
         }
     }
 
