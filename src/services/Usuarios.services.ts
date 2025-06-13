@@ -1,6 +1,6 @@
 import { UsuariosDao } from "../Dao/Usuarios.dao";
 import { Usuarios } from "../domain/Usuarios";
-import { CreateUsuarioDto} from "../dto/Usuarios.dto";
+import { CreateUsuarioDto, UsuarioDtoListar} from "../dto/Usuarios.dto";
 import * as bcrypt from 'bcrypt'
 
 export class UsuariosServices {
@@ -42,8 +42,17 @@ export class UsuariosServices {
         }
     }
     
-    public async listar(){  
-        return this.usuariosDao.listar()
+    public async listar(): Promise<UsuarioDtoListar[] | null> {
+        const dtoUsuarios: UsuarioDtoListar[] | null = await this.usuariosDao.listar()
+        if(!dtoUsuarios || dtoUsuarios.length === 0){
+            return null;
+        }
+        return dtoUsuarios.map((linha) => Usuarios.build({
+            nome: linha.nome,
+            email: linha.email,
+            id: "",
+            senha: ""
+        }));
     }
 
     public async buscarPorIdUser(id: string): Promise<Usuarios | null>{

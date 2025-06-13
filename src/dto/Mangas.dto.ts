@@ -1,7 +1,6 @@
 import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export interface MangasDtoListar {
-    id: string;
     nome: string;
     status?: string;
     data_lancamento?: string;

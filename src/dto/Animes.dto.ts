@@ -3,7 +3,7 @@ import { IsDate, IsNotEmpty, IsOptional, IsString } from "class-validator"
 export interface AnimeDTOListar {
     nome: string,
     status: string,
-    data_lancamento?: Date
+    data_lancamento?: string
 }
 
 export class CreateAnimeDto {

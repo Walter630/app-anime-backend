@@ -40,6 +40,7 @@ export class AdminController {
             console.log(err);
             res.status(500).json({ message: "Erro ao fazer login" });
         }
+        next()
     }
 
     async listar( req: Request, res: Response, next: NextFunction) {

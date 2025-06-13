@@ -1,11 +1,9 @@
 
 import { IsString, IsNotEmpty, IsOptional } from "class-validator";
-import { Type } from "class-transformer";
 
-export type UsuarioDtoListar = {
+export interface UsuarioDtoListar {
     nome: string,
-    email: string,
-    senha: string
+    email: string
 }
 
 export class CreateUsuarioDto {

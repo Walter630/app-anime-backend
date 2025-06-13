@@ -1,6 +1,8 @@
 import { Response, Request } from "express";
-import { createUsuarioDto, mostrarUsuarioDto } from "../dto/Usuarios.dto";
+import { CreateUsuarioDto } from "../dto/Usuarios.dto";
 import { UsuariosServices } from "../services/Usuarios.services";
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
 
 export class UsuariosController {
     private usuariosServs: UsuariosServices;
@@ -10,9 +12,14 @@ export class UsuariosController {
     }
 
     public salvar = async(req: Request, res: Response) => {
+        const dto = plainToInstance(CreateUsuarioDto, req.body)
+        const erros = await validate(dto)
+
+        if (erros.length > 0){
+            throw new Error('Possui erros no Dto de usuarios')
+        }
+        
         try{
-            console.log('Body recebido:', req.body)   // <== veja se aparece algo aqui
-            const dto: createUsuarioDto = req.body
             const result = await this.usuariosServs.salvar(dto)
             res.status(201).json(result)
         }catch(err){

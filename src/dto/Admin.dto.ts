@@ -7,6 +7,7 @@ export interface AdminDtoListar {
 }
 
 export class CreateAdminDto {
+    
     @IsString()
     @IsNotEmpty()
     nome!: string;

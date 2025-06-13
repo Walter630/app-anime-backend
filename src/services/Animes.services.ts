@@ -1,7 +1,7 @@
 
-import { AnimesDao } from '../Dao/animes.dao'
+import { AnimesDao } from '../Dao/animes.dao';
 import { Animes, AnimesProps } from '../domain/Animes'
-import { createAnimeDTO } from '../dto/Animes.dto'
+import { AnimeDTOListar, CreateAnimeDto } from '../dto/Animes.dto'
 
 
 export class AnimeServices {
@@ -11,10 +11,8 @@ export class AnimeServices {
         this.animesDao = animeDao
     }
 
-    public async criarAnime(dto: createAnimeDTO)
-    {
+    public async criarAnime(dto: CreateAnimeDto){
         //validacao
-        
         if (!dto.nome){
             throw new Error('Nome é obrigatorio')
         }
@@ -24,8 +22,12 @@ export class AnimeServices {
         return await this.animesDao.salvarAnime(animes)
     }
 
-    public async listarAnimes() {
-        return await this.animesDao.listarAnimes()
+    public async listarAnimes(): Promise<AnimeDTOListar[] | null> {
+        const dtoAnimes: AnimeDTOListar[] | null = await this.animesDao.listarAnimes()
+        if (!dtoAnimes){
+            return null
+        }
+        return dtoAnimes
     }
 
     public async listarPorId(id: number): Promise<AnimesProps | null> {

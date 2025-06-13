@@ -15,7 +15,7 @@ export class AdminDao {
     public async listarAdmin(): Promise<Admin[]> {
         const [listar]: any = await configDb.query<RowDataPacket[]>('SELECT * FROM admins')
         return listar.map((linha: any) => Admin.build({
-            id: linha.id,
+            id: linha.id.toString(),
             nome: linha.nome,
             email: linha.email,
             senha: linha.senha

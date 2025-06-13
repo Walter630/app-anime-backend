@@ -36,8 +36,8 @@ export class AdminServices {
             return null
         }
 
-        const createToken = CreateToken({id: admin.id})
-        const refreshToken = RefreshToken({id: admin.id})
+        const createToken = CreateToken({id: admin.id.toString()})
+        const refreshToken = RefreshToken({id: admin.id.toString()})
 
         const {senha: _, ...adminInfo} = admin
         return {
