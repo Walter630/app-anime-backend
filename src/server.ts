@@ -1,8 +1,7 @@
+import app from "./app";
 
-import app from './app'
-
-const porta = 3000
+const porta = 3000;
 
 app.listen(porta, () => {
-    console.log(`rodando na porta ${porta}`)
-})
+  console.log(`rodando na porta ${porta}`);
+});
