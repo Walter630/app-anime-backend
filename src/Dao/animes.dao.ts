@@ -3,65 +3,127 @@ import { configDb } from "../database/db";
 import { Animes } from "../domain/Animes";
 
 export class AnimesDao {
-  public async salvarAnime(animes: Animes): Promise<Animes> {
-    try {
-      const { nome, status, data_lancamento } = animes;
-      const [result]: any = await configDb.query(
-        "INSERT INTO animes (nome, status, data_lancamento) VALUES (?,?,?)",
-        [animes.nome, animes.status, animes.data_lancamento],
-      );
-      // O insert retorna o insertId que pode ser o id do anime criado
-      const id = result.insertId;
-      // Retorna o anime com id atualizado
-      return Animes.build({ id, nome, status, data_lancamento });
-    } catch (err) {
-      console.log(err);
-      throw new Error("Erro ao salvar anime");
-      // Retorna erro caso ocorra
-    }
-  }
+    public async salvarAnime(animes: Animes): Promise<Animes> {
+        const connection = await configDb.getConnection();
+        try {
+            await connection.beginTransaction();
 
-  async listarAnimes(): Promise<Animes[] | null> {
-    try {
-      const [row] = await configDb.query<RowDataPacket[]>(
-        "SELECT * FROM animes",
-      );
-      // Mapeia cada linha para um objeto Domain
-      return row.map((linha) =>
-        Animes.build({
-          id: linha.id,
-          nome: linha.nome,
-          status: linha.status,
-          data_lancamento: linha.data_lancamento,
-        }),
-      );
-    } catch (err) {
-      console.log(err);
-      return null;
-    }
-  }
+            const { nome, status, data_lancamento, chapters = [] } = animes;
 
-  async listarPorId(id: number): Promise<Animes | null> {
-    try {
-      const [row] = await configDb.query<RowDataPacket[]>(
-        "SELECT * FROM animes WHERE id = ?",
-        [id],
-      );
-      if (row.length === 0) {
-        return null;
-      }
-      const rows = row[0];
-      return Animes.build({
-        id: rows.id,
-        nome: rows.nome,
-        status: rows.status,
-        data_lancamento: rows.data_lancamento,
-      });
-    } catch (err) {
-      console.log(err);
-      return null;
+            // 1. Salva o anime
+            const [result]: any = await connection.query(
+                "INSERT INTO anime (nome, status, data_lancamento) VALUES (?, ?, ?)",
+                [nome, status, data_lancamento]
+            );
+
+            const animeId = result.insertId;
+
+            // 2. Salva cada capítulo
+            for (const chapter of chapters) {
+                await connection.query(
+                    "INSERT INTO chapters (anime_id, number, title, description, image) VALUES (?, ?, ?, ?, ?)",
+                    [
+                        animeId,
+                        chapter.number,
+                        chapter.title,
+                        chapter.description || null,
+                        chapter.image || null
+                    ]
+                );
+            }
+
+            await connection.commit();
+
+            return Animes.build({
+                id: animeId,
+                nome,
+                status,
+                data_lancamento,
+                chapters
+            });
+        } catch (err) {
+            await connection.rollback();
+            console.log(err);
+            throw new Error("Erro ao salvar anime");
+        } finally {
+            connection.release();
+        }
     }
-  }
+    async listarAnimes(): Promise<Animes[] | null> {
+        try {
+            const [animesRows] = await configDb.query<RowDataPacket[]>(
+                "SELECT * FROM anime"
+            );
+
+            // Para cada anime, busca seus capítulos
+            const animes = await Promise.all(
+                animesRows.map(async (row) => {
+                    const [chaptersRows] = await configDb.query<RowDataPacket[]>(
+                        "SELECT id, number, title, description, image FROM chapters WHERE anime_id = ? ORDER BY number ASC",
+                        [row.id]
+                    );
+
+                    const chapters = chaptersRows.map(ch => ({
+                        number: ch.number,
+                        title: ch.title,
+                        description: ch.description,
+                        image: ch.image
+                    }));
+
+                    return Animes.build({
+                        id: row.id,
+                        nome: row.nome,
+                        status: row.status,
+                        data_lancamento: row.data_lancamento,
+                        chapters
+                    });
+                })
+            );
+
+            return animes;
+        } catch (err) {
+            console.log(err);
+            return null;
+        }
+    }
+
+    async listarPorId(id: number): Promise<Animes | null> {
+        try {
+            const [animeRows] = await configDb.query<RowDataPacket[]>(
+                "SELECT * FROM anime WHERE id = ?",
+                [id]
+            );
+
+            if (animeRows.length === 0) {
+                return null;
+            }
+
+            const animeRow = animeRows[0];
+
+            const [chaptersRows] = await configDb.query<RowDataPacket[]>(
+                "SELECT id, number, title, description, image FROM chapters WHERE anime_id = ? ORDER BY number ASC",
+                [id]
+            );
+
+            const chapters = chaptersRows.map(ch => ({
+                number: ch.number,
+                title: ch.title,
+                description: ch.description,
+                image: ch.image
+            }));
+
+            return Animes.build({
+                id: animeRow.id,
+                nome: animeRow.nome,
+                status: animeRow.status,
+                data_lancamento: animeRow.data_lancamento,
+                chapters
+            });
+        } catch (err) {
+            console.log(err);
+            return null;
+        }
+    }
   // Deleta anime por id, retorna resultado do banco
   async deletar(id: number): Promise<boolean> {
     try {

@@ -1,5 +1,5 @@
 import { AnimesController } from "../controller/Animes.controller";
-import { AnimesDao } from "../Dao/Animes.dao";
+import { AnimesDao } from "../Dao/animes.dao";
 import { AnimeServices } from "../services/Animes.services";
 import { Api } from "./Api"; // sua classe responsável por abstrair o Express
 

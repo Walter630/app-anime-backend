@@ -1,21 +1,36 @@
-import { IsDate, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsString, IsNotEmpty, IsEnum, IsOptional, ValidateNested, IsArray, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export interface AnimeDTOListar {
-  nome: string;
-  status: string;
-  data_lancamento?: string;
+class ChapterDto {
+    @IsNumber()
+    number: number;
+
+    @IsString()
+    @IsNotEmpty()
+    title: string;
+
+    @IsString()
+    @IsOptional()
+    description?: string;
+
+    @IsString()
+    @IsOptional()
+    image?: string;
 }
 
 export class CreateAnimeDto {
-  @IsString()
-  @IsNotEmpty()
-  nome!: string;
+    @IsString()
+    @IsNotEmpty()
+    nome: string;
 
-  @IsString()
-  @IsNotEmpty()
-  status!: string;
+    @IsString()
+    @IsNotEmpty()
+    @IsEnum(['assistindo', 'completo', 'pausado', 'planejado', 'dropado'])
+    status: string;
 
-  @IsDate()
-  @IsOptional()
-  data_lancamento?: Date;
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => ChapterDto)
+    @IsOptional()
+    chapters?: ChapterDto[];
 }

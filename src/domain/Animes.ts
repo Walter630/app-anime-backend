@@ -1,10 +1,17 @@
 import { validarNomeAnime } from "../utils/Validation";
 
+export type Chapter = {
+    number: number;
+    title: string;
+    description?: string;
+    image?: string;
+};
 export type AnimesProps = {
   id: number;
   nome: string;
   status: string;
   data_lancamento: string;
+  chapters?: Chapter[];
 };
 
 export class Animes {
@@ -12,7 +19,7 @@ export class Animes {
     this.validador();
   }
 
-  public static create(nome: string, status: string) {
+  public static create(nome: string, status: string, chapters?: Chapter[]) {
     if (!nome || nome.length <= 0) {
       throw new Error("Nome é obrigatório");
     }
@@ -40,6 +47,7 @@ export class Animes {
       nome,
       status,
       data_lancamento: new Date().toISOString(), //ENUM('assistindo', 'completo', 'pausado', 'planejado', 'dropado') NOT NULL,
+        chapters: chapters || [],
     });
   }
 
@@ -65,5 +73,9 @@ export class Animes {
   }
   public get data_lancamento(): string {
     return this.props.data_lancamento;
+
+  }
+  public get chapters(): Chapter[] {
+      return this.props.chapters || [];
   }
 }

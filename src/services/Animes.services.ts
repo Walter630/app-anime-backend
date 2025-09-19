@@ -1,6 +1,6 @@
 import { AnimesDao } from "../Dao/animes.dao";
 import { Animes, AnimesProps } from "../domain/Animes";
-import { AnimeDTOListar, CreateAnimeDto } from "../dto/Animes.dto";
+import { CreateAnimeDto } from "../dto/Animes.dto";
 
 export class AnimeServices {
   private animesDao: AnimesDao;
@@ -29,15 +29,23 @@ export class AnimeServices {
     return dtoAnimes;
   }
 
-  public async listarPorId(id: number): Promise<AnimesProps | null> {
-    try {
-      const anime: Animes | null = await this.animesDao.listarPorId(id);
-      return anime || null;
-    } catch (err) {
-      console.log(err);
-      return null;
+    // src/services/Animes.services.ts
+
+    public async listarPorId(id: number) {
+        const result = await this.animesDao.listarPorId(id);
+        if (!result) return null;
+
+        // Se chapters for string, parseia (caso esteja armazenado como TEXT)
+        if (typeof result.chapters === 'string') {
+            try {
+                result.chapters = JSON.parse(result.chapters);
+            } catch (e) {
+                result.chapters = [];
+            }
+        }
+
+        return Animes.build(result); // 👈 Agora Animes aceita chapters
     }
-  }
 
   public async deletar(id: number) {
     return await this.animesDao.deletar(id);
